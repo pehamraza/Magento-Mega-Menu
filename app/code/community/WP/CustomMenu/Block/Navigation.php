@@ -56,6 +56,64 @@ class WP_CustomMenu_Block_Navigation extends Mage_Catalog_Block_Navigation
         return $this->_popupMenu;
     }
 
+    public function initiate()
+    {
+        if(!$this->_popupMenu && !$this->_topMenu){
+            $htmlTop = array();
+            $id = Mage::app()->getStore()->getRootCategoryId();
+            $model_c = Mage::getModel('catalog/category');
+            $category = $model_c->load($id);
+            $level = $category->getLevel();
+
+        // --- Static Block ---
+        $blockId = sprintf(self::CUSTOM_BLOCK_TEMPLATE, $id); // --- static block key
+        #Mage::log($blockId);
+        $collection = Mage::getModel('cms/block')->getCollection()
+        ->addFieldToFilter('identifier', array(array('like' => $blockId . '_w%'), array('eq' => $blockId)))
+        ->addFieldToFilter('is_active', 1);
+        $blockId = $collection->getFirstItem()->getIdentifier();
+        #Mage::log($blockId);
+        $blockHtml = Mage::app()->getLayout()->createBlock('cms/block')->setBlockId($blockId)->toHtml();
+
+        $htmlTop[] = '<div id="menu786" class="menu' . $active . '" onmouseover="wpShowMenuPopup(this, event, \'popup786\');" onmouseout="wpHideMenuPopup(this, event, \'popup786\', \'menu786\')">';
+
+        $htmlTop[] = '<div class="parentMenu">';
+        $htmlTop[] = '<a  class="level' . $active . '" href="javascript:void(0);" rel="">';
+        $htmlTop[] = '<span>Shop Now</span>';
+        $htmlTop[] = '</a>';
+        $htmlTop[] = '</div>';
+        $htmlTop[] = '</div>';
+        if(count($this->_topMenu)<1)
+            $this->_topMenu[] = implode("\n", $htmlTop);
+
+        // --- Add Popup block (hidden) ---
+        $htmlPopup = array();
+            // --- Popup function for hide ---
+        $htmlPopup[] = '<div id="popup786" class="wp-custom-menu-popup" onmouseout="wpHideMenuPopup(this, event, \'popup786\', \'menu786\')" onmouseover="wpPopupOver(this, event, \'popup786\', \'menu786\')">';
+
+            // --- draw Sub Categories ---
+        $htmlPopup[] = '<div class="block1">';
+        $htmlPopup[] = '___REPLACE___';
+        $htmlPopup[] = '<div class="clearBoth"></div>';
+        $htmlPopup[] = '</div>';
+        
+            // --- draw Custom User Block ---
+        if ($blockHtml) {
+            $htmlPopup[] = '<div id="' . $blockId . '" class="block2">';
+            $htmlPopup[] = $blockHtml;
+            $htmlPopup[] = '</div>';
+        }
+        $htmlPopup[] = '</div>';
+        $this->_popupMenu[] = implode("\n", $htmlPopup);
+    }
+}
+
+    public function drawCustomMenuItems($categories, $level=0, $last=false){
+        $this->initiate();
+        $columns = (int)Mage::getStoreConfig('custom_menu/columns/count');
+        $this->_popupMenu = str_replace('___REPLACE___', $this->drawColumns($categories, $columns), $this->_popupMenu);
+    }
+
     public function drawCustomMenuItem($category, $level = 0, $last = false)
     {
         if (!$category->getIsActive()) return;
@@ -65,8 +123,8 @@ class WP_CustomMenu_Block_Navigation extends Mage_Catalog_Block_Navigation
         $blockId = sprintf(self::CUSTOM_BLOCK_TEMPLATE, $id); // --- static block key
         #Mage::log($blockId);
         $collection = Mage::getModel('cms/block')->getCollection()
-            ->addFieldToFilter('identifier', array(array('like' => $blockId . '_w%'), array('eq' => $blockId)))
-            ->addFieldToFilter('is_active', 1);
+        ->addFieldToFilter('identifier', array(array('like' => $blockId . '_w%'), array('eq' => $blockId)))
+        ->addFieldToFilter('is_active', 1);
         $blockId = $collection->getFirstItem()->getIdentifier();
         #Mage::log($blockId);
         $blockHtml = Mage::app()->getLayout()->createBlock('cms/block')->setBlockId($blockId)->toHtml();
@@ -258,25 +316,25 @@ class WP_CustomMenu_Block_Navigation extends Mage_Catalog_Block_Navigation
             $storeId = Mage::app()->getStore()->getId();
             /* @var $collection Mage_Catalog_Model_Resource_Eav_Mysql4_Category_Collection */
             $collection->addAttributeToSelect('name')
-                ->addAttributeToSelect('is_active')
-                ->setStoreId($storeId);
-			if(method_exists($collection, 'setProductStoreId'))
+            ->addAttributeToSelect('is_active')
+            ->setStoreId($storeId);
+            if(method_exists($collection, 'setProductStoreId'))
                 $collection->setProductStoreId($storeId);
-			if(method_exists($collection, 'setLoadProductCount'))
+            if(method_exists($collection, 'setLoadProductCount'))
                 $collection->setLoadProductCount(true);
 
             $productsCount = array();
             foreach($collection as $cat) {
-				$_productCollection = array();
-				$_productCollection = Mage::getModel('catalog/category')
-					->load($cat->getId())->getProductCollection();
-				Mage::getSingleton('cataloginventory/stock')
-				->addInStockFilterToCollection($_productCollection);
-				$productsCount[$cat->getId()] = array(
-					'name' => $cat->getName(),
-					'product_count' => $cat->getProductCount(),
-					'in_stock' => count($_productCollection)
-				);
+                $_productCollection = array();
+                $_productCollection = Mage::getModel('catalog/category')
+                ->load($cat->getId())->getProductCollection();
+                Mage::getSingleton('cataloginventory/stock')
+                ->addInStockFilterToCollection($_productCollection);
+                $productsCount[$cat->getId()] = array(
+                    'name' => $cat->getName(),
+                    'product_count' => $cat->getProductCount(),
+                    'in_stock' => count($_productCollection)
+                    );
             }
             #Mage::log($productsCount);
             $this->_productsCount = $productsCount;
