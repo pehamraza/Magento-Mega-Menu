@@ -63,11 +63,11 @@ class WP_CustomMenu_Helper_Data extends Mage_Core_Helper_Abstract
     {
         // checking for the cache
         $cache = Mage::app()->getCacheInstance();
-		$cacheTags = array(Mage_Core_Model_Store::CACHE_TAG, Mage_Cms_Model_Block::CACHE_TAG, Mage_Catalog_Model_Category::CACHE_TAG);
-		$cacheKey = "Mobile_".$this->getCacheKeyInfo();
-		
-		$data = $cache->load($cacheKey);
-		if($data) return ($data);
+        $cacheTags = array(Mage_Core_Model_Store::CACHE_TAG, Mage_Cms_Model_Block::CACHE_TAG, Mage_Catalog_Model_Category::CACHE_TAG);
+        $cacheKey = "Mobile_".$this->getCacheKeyInfo();
+        
+        $data = $cache->load($cacheKey);
+        if($data) return ($data);
 
         $menuData = Mage::helper('custommenu')->getMenuData();
         extract($menuData);
@@ -109,11 +109,11 @@ HTML;
     public function getMenuContent()
     {
         $cache = Mage::app()->getCacheInstance();
-		$cacheTags = array(Mage_Core_Model_Store::CACHE_TAG, Mage_Cms_Model_Block::CACHE_TAG, Mage_Catalog_Model_Category::CACHE_TAG);
-		$cacheKey = $this->getCacheKeyInfo();
-		
-		$data = $cache->load($cacheKey);
-		if($data) return unserialize($data);
+        $cacheTags = array(Mage_Core_Model_Store::CACHE_TAG, Mage_Cms_Model_Block::CACHE_TAG, Mage_Catalog_Model_Category::CACHE_TAG);
+        $cacheKey = $this->getCacheKeyInfo();
+        
+        $data = $cache->load($cacheKey);
+        if($data) return unserialize($data);
 
 
         $menuData = Mage::helper('custommenu')->getMenuData();
@@ -136,9 +136,16 @@ HTML;
         // --- Menu Content ---
         $menuContent        = '';
         $menuContentArray   = array();
-        foreach ($_categories as $_category) {
-            $_block->drawCustomMenuItem($_category);
-        }
+         if(!Mage::getSingleton('customer/session')->isLoggedIn()){
+            //show simple menu
+                foreach ($_categories as $_category) {
+                        $_block->drawCustomMenuItem($_category);
+                    }
+            }else{
+            //show mega menu
+                $_block->drawCustomMenuItems($_categories);
+            }
+        
         $topMenuArray       = $_block->getTopMenuArray();
         $topMenuContent     = '';
         if (count($topMenuArray)) {
