@@ -136,15 +136,15 @@ HTML;
         // --- Menu Content ---
         $menuContent        = '';
         $menuContentArray   = array();
-         if(!Mage::getSingleton('customer/session')->isLoggedIn()){
+         /*if(!Mage::getSingleton('customer/session')->isLoggedIn()){
             //show simple menu
                 foreach ($_categories as $_category) {
                         $_block->drawCustomMenuItem($_category);
                     }
-            }else{
+            }else{*/
             //show mega menu
                 $_block->drawCustomMenuItems($_categories);
-            }
+            // }
         
         $topMenuArray       = $_block->getTopMenuArray();
         $topMenuContent     = '';
